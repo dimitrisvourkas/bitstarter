@@ -1,4 +1,4 @@
-==#!/usr/bin/env node
+#!/usr/bin/env node
 /*
 Automatically grade files for the presence of specified HTML tags/attributes.
 Uses commander.js and cheerio. Teaches command line application development
@@ -27,7 +27,7 @@ var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 var URL_DEFAULT = "http://fierce-reaches-1073.herokuapp.com";
-var rest=require('./restler');
+var rest=require('restler');
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -63,13 +63,29 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var checkHtmlFile2 = function(url, checksfile){
+    var result = rest.get(url).on('complete', function(response){
+	response;
+  });
+    
+    var checks = loadChecks(checksfile).sort();
+    var out = {};
+    for(var ii in checks) {
+	var present = (checks[ii]).length > 0;
+	out[checks[ii]] = present;
+    }
+    return out;
+
+};
+
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <url_link>','Link to URL', clone(assertFileExists), URL_DEFAULT)
+        .option('-u, --url <url_link>','Link to URL', URL_DEFAULT)
 	.parse(process.argv);
     var checkJson = checkHtmlFile(program.file, program.checks);
+    if (program.url) var checkJson = checkHtmlFile2(program.url, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
